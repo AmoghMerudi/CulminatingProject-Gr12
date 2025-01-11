@@ -3,7 +3,7 @@ class GenderColumn extends Column {
     constructor(index, totalColumns) {
         super(index, totalColumns); // Call parent constructor
         this.points = employees.filter(e => e.gender === genders[index]);
-        this.sortTimes = { bubble: 0, inBuilt: 0 };
+        this.sortTimes = { bubble: 0, inBuilt: 0, merge: 0 };
     }
 
     render() {
@@ -21,32 +21,38 @@ class GenderColumn extends Column {
     }
 
     plotPoints() {
-        let spacingFactor = 10;
-
-        for (let i = 0; i < this.points.length; i++) {
+        let centerMaleX = width / 4; // Center of the male circle
+        let centerFemaleX = (3 * width) / 4; // Center of the female circle
+        let centerY = height / 2; // Same vertical center for both circles
+        let maxRadius = min(width, height) / 2; // Maximum radius for the circles
+        let maxSalary = max(this.points.map(p => p.salary)); // Maximum salary for scaling
+    
+        // Evenly distribute points around the circle
+        let totalPoints = this.points.length;
+        let angleStep = TWO_PI / totalPoints;
+    
+        for (let i = 0; i < totalPoints; i++) {
             let point = this.points[i];
-            let x = map(
-                point.yearsExp,
-                0,
-                40,
-                this.index * width / this.totalColumns + 100,
-                (this.index + 1) * width / this.totalColumns - 100
-            );
-            let y = map(
-                point.salary,
-                0,
-                max(employees.map(e => e.salary)),
-                height - 50,
-                50
-            );
-
-            y += sin(i * spacingFactor) * 100;
-
+    
+            // Determine circle center based on gender
+            let centerX = point.gender === "Male" ? centerMaleX : centerFemaleX;
+    
+            // Calculate angle for the current point
+            let theta = map(point.yearsExp, 0, 40, 0, TWO_PI * 3);
+    
+            // Map salary to radius
+            let r = map(point.salary, 0, maxSalary, 200, maxRadius);
+    
+            // Convert polar coordinates to Cartesian
+            let x = centerX + r * cos(theta);
+            let y = centerY + r * sin(theta);
+    
             let size = this.sorted ? 15 + sin(this.animationTimer * 0.1 + i) * 5 : 10;
             let pointColor = this.sorted
                 ? lerpColor(this.baseColor, this.targetColor, sin(this.animationTimer * 0.01 + i) * 0.5 + 0.5)
                 : this.baseColor;
-
+    
+            // Check for hover and display tooltip
             if (dist(mouseX, mouseY, x, y) < size / 2) {
                 fill(255, 255, 100, 200);
                 ellipse(x, y, size * 1.5, size * 1.5);
@@ -56,7 +62,7 @@ class GenderColumn extends Column {
                 ellipse(x, y, size, size);
             }
         }
-
+    
         if (this.sorted) {
             this.animationTimer++;
             if (this.animationTimer > 100) {
@@ -91,19 +97,25 @@ class GenderColumn extends Column {
             this.sortTimes.bubble = Sorter.bubbleSort(this.points, "salary");
         } else if (method === "inBuilt") {
             this.sortTimes.inBuilt = Sorter.inBuiltSort(this.points, "salary");
+        } else if (method === "merge") {
+            let startTime = performance.now();
+            this.points = Sorter.mergeSort(this.points, "salary");
+            let endTime = performance.now();
+            this.sortTimes.merge = endTime - startTime;
         }
         this.sorted = true;
         this.animationTimer = 0;
     }
+    
 
     displaySortTimes() {
         fill(255);
         textSize(14);
         textAlign(LEFT);
         text(
-            `Bubble Sort: ${this.sortTimes.bubble.toFixed(2)} ms\nIn-built Sort: ${this.sortTimes.inBuilt.toFixed(2)} ms`,
+            `Bubble Sort: ${this.sortTimes.bubble.toFixed(2)} ms\nIn-built Sort: ${this.sortTimes.inBuilt.toFixed(2) } ms\nMerge Sort: ${this.sortTimes.merge.toFixed(2)} ms`,
             this.index * width / this.totalColumns + 10,
-            height - 50
+            height / 2
         );
     }
 }

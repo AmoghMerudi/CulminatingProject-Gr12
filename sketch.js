@@ -11,7 +11,7 @@ function preload() {
 }
 
 function setup() {
-    createCanvas(windowWidth * 4, windowHeight * 4);
+    createCanvas(windowWidth, windowHeight);
 
     // Convert CSV to JSON
     employeeDataJSON = convertCSVToJSON();
@@ -69,16 +69,21 @@ function convertCSVToJSON() {
 }
 
 function keyPressed() {
-  if (key === "B" || key === "b") {
-      for (let column of genderColumns) {
-          column.sortPoints("bubble");
-      }
-  } else if (key === "I" || key === "i") {
-      for (let column of genderColumns) {
-          column.sortPoints("inBuilt");
-      }
-  }
-} 
+    if (key === "B" || key === "b") {
+        for (let column of genderColumns) {
+            column.sortPoints("bubble");
+        }
+    } else if (key === "I" || key === "i") {
+        for (let column of genderColumns) {
+            column.sortPoints("inBuilt");
+        }
+    } else if (key === "M" || key === "m") {
+        for (let column of genderColumns) {
+            column.sortPoints("merge");
+        }
+    }
+}
+
 
 // Populate employees array using the JSON data
 function parseData() {
