@@ -1,13 +1,14 @@
+// GenderColumn inherits from Column
 class GenderColumn extends Column {
     constructor(index, totalColumns) {
-        super(index, totalColumns); 
+        super(index, totalColumns); // Call parent constructor
         this.points = employees.filter(e => e.gender === genders[index]);
         this.sortTimes = { bubble: 0, inBuilt: 0, merge: 0 };
     }
 
     render() {
-        this.renderBase(); 
-        this.displayBaseText(genders[this.index]); 
+        this.renderBase(); // Call base class method
+        this.displayBaseText(genders[this.index]); // Call base class method
     }
 
     assignJobRoleColors() {
@@ -20,24 +21,29 @@ class GenderColumn extends Column {
     }
 
     plotPoints() {
-        let centerMaleX = width / 4; 
-        let centerFemaleX = (3 * width) / 4; 
-        let centerY = height / 2; 
-        let maxRadius = min(width, height) / 2; 
-        let maxSalary = max(this.points.map(p => p.salary)); 
+        let centerMaleX = width / 4; // Center of the male circle
+        let centerFemaleX = (3 * width) / 4; // Center of the female circle
+        let centerY = height / 2; // Same vertical center for both circles
+        let maxRadius = min(width, height) / 2; // Maximum radius for the circles
+        let maxSalary = max(this.points.map(p => p.salary)); // Maximum salary for scaling
     
+        // Evenly distribute points around the circle
         let totalPoints = this.points.length;
         let angleStep = TWO_PI / totalPoints;
     
         for (let i = 0; i < totalPoints; i++) {
             let point = this.points[i];
     
+            // Determine circle center based on gender
             let centerX = point.gender === "Male" ? centerMaleX : centerFemaleX;
     
+            // Calculate angle for the current point
             let theta = map(point.yearsExp, 0, 40, 0, TWO_PI * 3);
     
+            // Map salary to radius
             let r = map(point.salary, 0, maxSalary, 200, maxRadius);
     
+            // Convert polar coordinates to Cartesian
             let x = centerX + r * cos(theta);
             let y = centerY + r * sin(theta);
     
@@ -46,6 +52,7 @@ class GenderColumn extends Column {
                 ? lerpColor(this.baseColor, this.targetColor, sin(this.animationTimer * 0.01 + i) * 0.5 + 0.5)
                 : this.baseColor;
     
+            // Check for hover and display tooltip
             if (dist(mouseX, mouseY, x, y) < size / 2) {
                 fill(255, 255, 100, 200);
                 ellipse(x, y, size * 1.5, size * 1.5);
@@ -65,28 +72,25 @@ class GenderColumn extends Column {
     }
 
     displayTooltip(point, x, y) {
-        resetMatrix(); 
         let lines = [
             `Role: ${point.jobRole}`,
             `Years Exp: ${point.yearsExp}`,
             `Salary: $${point.salary.toFixed(2)}`
         ];
-    
+
         textSize(12);
         let textWidthMax = Math.max(...lines.map(line => textWidth(line))) + 20;
         let textHeight = lines.length * 16;
-    
+
         fill(30, 200);
         rect(x + 10, y - textHeight - 10, textWidthMax, textHeight + 10, 5);
-    
+
         fill(255);
         textAlign(LEFT, TOP);
         for (let i = 0; i < lines.length; i++) {
             text(lines[i], x + 15, y - textHeight + i * 16);
         }
-        applyMatrix(); 
     }
-    
 
     sortPoints(method) {
         if (method === "bubble") {
@@ -111,7 +115,7 @@ class GenderColumn extends Column {
         text(
             `Bubble Sort: ${this.sortTimes.bubble.toFixed(2)} ms\nIn-built Sort: ${this.sortTimes.inBuilt.toFixed(2) } ms\nMerge Sort: ${this.sortTimes.merge.toFixed(2)} ms`,
             this.index * width / this.totalColumns + 10,
-            height / 2
+            height 
         );
     }
 }
