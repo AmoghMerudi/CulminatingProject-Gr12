@@ -1,10 +1,17 @@
 let employees = [];
 let genders = [];
 let genderColumns = [];
-let employeeDataJSON = []; // JSON object for the dataset
-let searchBox; // Input element for searching
-let searchLogic; // Instance of the Search class
-let filteredEmployees = []; // Filtered employees based on search
+let employeeDataJSON = []; 
+let searchBox; 
+let searchLogic; 
+let filteredEmployees = []; 
+
+
+let zoom = 1; 
+let offsetX = 0; 
+let offsetY = 0; 
+let isDragging = false;
+let startDragX, startDragY;
 
 function preload() {
     table = loadTable("BananaByte_Employee_Salary_090923.csv", "csv", "header");
@@ -13,28 +20,27 @@ function preload() {
 function setup() {
     createCanvas(windowWidth, windowHeight);
 
-    // Convert CSV to JSON
     employeeDataJSON = convertCSVToJSON();
 
-    // Use the JSON data to populate employees array
     parseData();
 
     genders = [...new Set(employees.map(e => e.gender))];
     genderColumns = genders.map((_, i) => new GenderColumn(i, genders.length));
 
-    // Initialize the Search class with the employee dataset
     searchLogic = new Search(employees);
 
-    // Create search box
     searchBox = createInput();
-    searchBox.position(width / 3 - 100, height - 50); // Centered near the bottom
+    searchBox.position(width / 2 - 100, height - 50); 
     searchBox.size(200);
     searchBox.attribute("placeholder", "Search by Job Role");
-    searchBox.input(handleSearch); // Trigger filtering on input
+    searchBox.input(handleSearch); 
 }
 
 function draw() {
     background(30);
+
+    translate(offsetX, offsetY);
+    scale(zoom);
 
     for (let column of genderColumns) {
         column.render();
@@ -42,14 +48,15 @@ function draw() {
         column.displaySortTimes();
     }
 
-    // Display instructions for the search box
+    resetMatrix();
+
     fill(255);
     textSize(16);
     textAlign(CENTER);
-    text("Type a Job Role to filter points", width / 3, height - 80);
+    text("Type a Job Role to filter points", width / 2, height - 80);
+    text(searchLogic.runtimeAnalysis, width / 2, height - 100);
 }
 
-// Convert CSV data to JSON format
 function convertCSVToJSON() {
     let jsonData = [];
     for (let i = 0; i < table.getRowCount(); i++) {
@@ -60,7 +67,6 @@ function convertCSVToJSON() {
             jobRole: table.getString(i, "Job_Role")
         };
 
-        // Validate numeric fields
         if (!isNaN(row.yearsExp) && !isNaN(row.salary)) {
             jsonData.push(row);
         }
@@ -84,24 +90,45 @@ function keyPressed() {
     }
 }
 
-
-// Populate employees array using the JSON data
 function parseData() {
     for (let row of employeeDataJSON) {
         employees.push(new Employee(row.gender, row.yearsExp, row.salary, row.jobRole));
     }
-    filteredEmployees = [...employees]; // Initially, all employees are displayed
+    filteredEmployees = [...employees];
 }
 
-// Handle search input
 function handleSearch() {
     const query = searchBox.value();
 
-    // Use the Search class to perform a linear search
     filteredEmployees = searchLogic.linearSearch(query);
 
-    // Update points in GenderColumns based on filtered employees
     for (let i = 0; i < genderColumns.length; i++) {
         genderColumns[i].points = filteredEmployees.filter(e => e.gender === genders[i]);
     }
+}
+
+function mousePressed() {
+    if (mouseButton === LEFT) {
+        isDragging = true;
+        startDragX = mouseX - offsetX;
+        startDragY = mouseY - offsetY;
+    }
+}
+
+function mouseDragged() {
+    if (isDragging) {
+        offsetX = mouseX - startDragX;
+        offsetY = mouseY - startDragY;
+    }
+}
+
+function mouseReleased() {
+    if (mouseButton === LEFT) {
+        isDragging = false;
+    }
+}
+
+function mouseWheel(event) {
+    zoom -= event.delta * 0.001;
+    zoom = constrain(zoom, 0.5, 3);
 }

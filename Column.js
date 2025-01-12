@@ -4,8 +4,8 @@ class Column {
         this.totalColumns = totalColumns;
         this.sorted = false;
         this.animationTimer = 0;
-        this.baseColor = color(200, 100, 150, 150); // Initial point color
-        this.targetColor = color(100, 200, 250, 150); // Color after sorting
+        this.baseColor = color(200, 100, 150, 150); 
+        this.targetColor = color(100, 200, 250, 150); 
     }
 
     renderBase() {
